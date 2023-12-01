@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/shr-go/bili_live_tui/api"
 	"mime/multipart"
+	"os/exec"
 	"reflect"
 	"strconv"
 	"time"
+	"unicode"
 )
 
 func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
@@ -20,6 +22,11 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 	content := msg.Info[1].(string)
 	rawUserInfo := msg.Info[2].([]interface{})
 	rawMedalInfo := msg.Info[3].([]interface{})
+
+	userName := rawUserInfo[1].(string)
+	say(userName)
+	say("说")
+	say(content)
 
 	var medal *medalInfo
 	if len(rawMedalInfo) > 10 {
@@ -39,6 +46,29 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 		contentColor: fmt.Sprintf("#%06X", int64(rawBasicInfo[3].(float64))),
 	}
 	return
+}
+
+func say(content string) {
+	zhspeak := "/home/algouage/.local/share/zhspeak/bin/zhspeak"
+
+	if isASCII(content) {
+		cmd := exec.Command(zhspeak, "-en", content)
+		cmd.Run()
+	} else {
+		cmd := exec.Command(zhspeak, content)
+		cmd.Run()
+	}
+
+}
+
+func isASCII(s string) bool {
+	for _, c := range s {
+		if c > unicode.MaxASCII {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 func generateFakeDanmuMsg(content string) (danmu *danmuMsg) {
