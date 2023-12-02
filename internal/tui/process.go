@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strconv"
 	"time"
 	"unicode"
@@ -24,9 +25,17 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 	rawMedalInfo := msg.Info[3].([]interface{})
 
 	userName := rawUserInfo[1].(string)
-	say(userName)
-	say("说")
-	say(content)
+	os := runtime.GOOS
+	switch os {
+	case "darwin":
+		darwinSay(userName + "说" + content)
+	case "linux":
+		say(userName)
+		say("说")
+		say(content)
+	case "windows":
+	default:
+	}
 
 	var medal *medalInfo
 	if len(rawMedalInfo) > 10 {
@@ -48,6 +57,11 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 	return
 }
 
+func darwinSay(content string) {
+	cmd := exec.Command("say", content)
+	cmd.Run()
+}
+
 func say(content string) {
 	zhspeak := "/home/algouage/.local/share/zhspeak/bin/zhspeak"
 
@@ -64,11 +78,11 @@ func say(content string) {
 func isASCII(s string) bool {
 	for _, c := range s {
 		if c > unicode.MaxASCII {
-			return false;
+			return false
 		}
 	}
 
-	return true;
+	return true
 }
 
 func generateFakeDanmuMsg(content string) (danmu *danmuMsg) {
